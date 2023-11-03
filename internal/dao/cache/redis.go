@@ -6,13 +6,10 @@ package cache
 
 import (
 	"context"
-	"fmt"
-	"time"
-	"unsafe"
-
 	"github.com/Masterminds/semver/v3"
-	"github.com/redis/rueidis"
+	"github.com/redis/go-redis/v9"
 	"github.com/rocboss/paopao-ce/internal/core"
+	"time"
 )
 
 var (
@@ -31,49 +28,57 @@ const (
 )
 
 type redisCache struct {
-	c rueidis.Client
+	//c rueidis.Client
+	c *redis.Client
 }
 
 type redisCacheTweetsCache struct {
 	expireDuration time.Duration
 	expireInSecond int64
-	c              rueidis.Client
+	//c              rueidis.Client
+	c *redis.Client
 }
 
 func (s *redisCacheTweetsCache) getTweetsBytes(key string) ([]byte, error) {
-	res, err := rueidis.MGetCache(s.c, context.Background(), s.expireDuration, []string{key})
-	if err != nil {
-		return nil, err
-	}
-	message := res[key]
-	return message.AsBytes()
+	//res, err := rueidis.MGetCache(s.c, context.Background(), s.expireDuration, []string{key})
+	//if err != nil {
+	//	return nil, err
+	//}
+	//message := res[key]
+	//return message.AsBytes()
+
+	return nil, nil // switch to go-redis todo
 }
 
 func (s *redisCacheTweetsCache) setTweetsBytes(key string, bs []byte) error {
-	cmd := s.c.B().Set().Key(key).Value(rueidis.BinaryString(bs)).ExSeconds(s.expireInSecond).Build()
-	return s.c.Do(context.Background(), cmd).Error()
+	//cmd := s.c.B().Set().Key(key).Value(rueidis.BinaryString(bs)).ExSeconds(s.expireInSecond).Build()
+	//return s.c.Do(context.Background(), cmd).Error()
+	return nil // switch to go-redis todo
 }
 
 func (s *redisCacheTweetsCache) delTweets(keys []string) error {
-	cmd := s.c.B().Del().Key(keys...).Build()
-	return s.c.Do(context.Background(), cmd).Error()
+	//cmd := s.c.B().Del().Key(keys...).Build()
+	//return s.c.Do(context.Background(), cmd).Error()
+	return nil // switch to go-redis todo
 }
 
 func (s *redisCacheTweetsCache) allKeys() (res []string, err error) {
-	ctx, cursor := context.Background(), uint64(0)
-	for {
-		cmd := s.c.B().Scan().Cursor(cursor).Match(_cacheIndexKeyPattern).Count(50).Build()
-		entry, err := s.c.Do(ctx, cmd).AsScanEntry()
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, entry.Elements...)
-		if entry.Cursor != 0 {
-			cursor = entry.Cursor
-			continue
-		}
-		break
-	}
+	//ctx, cursor := context.Background(), uint64(0)
+	//for {
+	//	cmd := s.c.B().Scan().Cursor(cursor).Match(_cacheIndexKeyPattern).Count(50).Build()
+	//	entry, err := s.c.Do(ctx, cmd).AsScanEntry()
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	res = append(res, entry.Elements...)
+	//	if entry.Cursor != 0 {
+	//		cursor = entry.Cursor
+	//		continue
+	//	}
+	//	break
+	//}
+
+	// switch to go-redis todo
 	return
 }
 
@@ -86,81 +91,101 @@ func (s *redisCacheTweetsCache) Version() *semver.Version {
 }
 
 func (r *redisCache) SetPushToSearchJob(ctx context.Context) error {
-	return r.c.Do(ctx, r.c.B().Set().
-		Key(_pushToSearchJobKey).Value("1").
-		Nx().ExSeconds(3600).
-		Build()).Error()
+	//return r.c.Do(ctx, r.c.B().Set().
+	//	Key(_pushToSearchJobKey).Value("1").
+	//	Nx().ExSeconds(3600).
+	//	Build()).Error()
+
+	return nil // switch to go-redis todo
 }
 
 func (r *redisCache) DelPushToSearchJob(ctx context.Context) error {
-	return r.c.Do(ctx, r.c.B().Del().Key(_pushToSearchJobKey).Build()).Error()
+	//return r.c.Do(ctx, r.c.B().Del().Key(_pushToSearchJobKey).Build()).Error()
+	return nil // switch to go-redis todo
 }
 
 func (r *redisCache) SetImgCaptcha(ctx context.Context, id string, value string) error {
-	return r.c.Do(ctx, r.c.B().Set().
-		Key(_imgCaptchaKey+id).Value(value).
-		ExSeconds(300).
-		Build()).Error()
+	//return r.c.Do(ctx, r.c.B().Set().
+	//	Key(_imgCaptchaKey+id).Value(value).
+	//	ExSeconds(300).
+	//	Build()).Error()
+
+	return nil // switch to go-redis todo
 }
 
 func (r *redisCache) GetImgCaptcha(ctx context.Context, id string) (string, error) {
-	res, err := r.c.Do(ctx, r.c.B().Get().Key(_imgCaptchaKey+id).Build()).AsBytes()
-	return unsafe.String(&res[0], len(res)), err
+	//res, err := r.c.Do(ctx, r.c.B().Get().Key(_imgCaptchaKey+id).Build()).AsBytes()
+	//return unsafe.String(&res[0], len(res)), err
+
+	return "", nil // switch to go-redis todo
 }
 
 func (r *redisCache) DelImgCaptcha(ctx context.Context, id string) error {
-	return r.c.Do(ctx, r.c.B().Del().Key(_imgCaptchaKey+id).Build()).Error()
+	//return r.c.Do(ctx, r.c.B().Del().Key(_imgCaptchaKey+id).Build()).Error()
+	return nil // switch to go-redis todo
 }
 
 func (r *redisCache) GetCountSmsCaptcha(ctx context.Context, phone string) (int64, error) {
-	return r.c.Do(ctx, r.c.B().Get().Key(_smsCaptchaKey+phone).Build()).AsInt64()
+	//return r.c.Do(ctx, r.c.B().Get().Key(_smsCaptchaKey+phone).Build()).AsInt64()
+	return 0, nil // switch to go-redis todo
 }
 
 func (r *redisCache) IncrCountSmsCaptcha(ctx context.Context, phone string) (err error) {
-	if err = r.c.Do(ctx, r.c.B().Incr().Key(_smsCaptchaKey+phone).Build()).Error(); err == nil {
-		currentTime := time.Now()
-		endTime := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 23, 59, 59, 0, currentTime.Location())
-		err = r.c.Do(ctx, r.c.B().Expire().Key(_smsCaptchaKey+phone).Seconds(int64(endTime.Sub(currentTime)/time.Second)).Build()).Error()
-	}
+	//if err = r.c.Do(ctx, r.c.B().Incr().Key(_smsCaptchaKey+phone).Build()).Error(); err == nil {
+	//	currentTime := time.Now()
+	//	endTime := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 23, 59, 59, 0, currentTime.Location())
+	//	err = r.c.Do(ctx, r.c.B().Expire().Key(_smsCaptchaKey+phone).Seconds(int64(endTime.Sub(currentTime)/time.Second)).Build()).Error()
+	//}
+
+	// switch to go-redis todo
 	return
 }
 
 func (r *redisCache) GetCountLoginErr(ctx context.Context, id int64) (int64, error) {
-	return r.c.Do(ctx, r.c.B().Get().Key(fmt.Sprintf("%s:%d", _countLoginErrKey, id)).Build()).AsInt64()
+	//return r.c.Do(ctx, r.c.B().Get().Key(fmt.Sprintf("%s:%d", _countLoginErrKey, id)).Build()).AsInt64()
+	return 0, nil // switch to go-redis todo
 }
 
 func (r *redisCache) DelCountLoginErr(ctx context.Context, id int64) error {
-	return r.c.Do(ctx, r.c.B().Del().Key(fmt.Sprintf("%s:%d", _countLoginErrKey, id)).Build()).Error()
+	//return r.c.Do(ctx, r.c.B().Del().Key(fmt.Sprintf("%s:%d", _countLoginErrKey, id)).Build()).Error()
+	return nil // switch to go-redis todo
 }
 
 func (r *redisCache) IncrCountLoginErr(ctx context.Context, id int64) error {
-	err := r.c.Do(ctx, r.c.B().Incr().Key(fmt.Sprintf("%s:%d", _countLoginErrKey, id)).Build()).Error()
-	if err == nil {
-		err = r.c.Do(ctx, r.c.B().Expire().Key(fmt.Sprintf("%s:%d", _countLoginErrKey, id)).Seconds(3600).Build()).Error()
-	}
-	return err
+	//err := r.c.Do(ctx, r.c.B().Incr().Key(fmt.Sprintf("%s:%d", _countLoginErrKey, id)).Build()).Error()
+	//if err == nil {
+	//	err = r.c.Do(ctx, r.c.B().Expire().Key(fmt.Sprintf("%s:%d", _countLoginErrKey, id)).Seconds(3600).Build()).Error()
+	//}
+	//return err
+
+	return nil // switch to go-redis todo
 }
 
 func (r *redisCache) GetCountWhisper(ctx context.Context, uid int64) (int64, error) {
-	return r.c.Do(ctx, r.c.B().Get().Key(fmt.Sprintf("%s:%d", _countWhisperKey, uid)).Build()).AsInt64()
+	//return r.c.Do(ctx, r.c.B().Get().Key(fmt.Sprintf("%s:%d", _countWhisperKey, uid)).Build()).AsInt64()
+	return 0, nil // switch to go-redis todo
 }
 
 func (r *redisCache) IncrCountWhisper(ctx context.Context, uid int64) (err error) {
-	key := fmt.Sprintf("%s:%d", _countWhisperKey, uid)
-	if err = r.c.Do(ctx, r.c.B().Incr().Key(key).Build()).Error(); err == nil {
-		currentTime := time.Now()
-		endTime := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 23, 59, 59, 0, currentTime.Location())
-		err = r.c.Do(ctx, r.c.B().Expire().Key(key).Seconds(int64(endTime.Sub(currentTime)/time.Second)).Build()).Error()
-	}
+	//key := fmt.Sprintf("%s:%d", _countWhisperKey, uid)
+	//if err = r.c.Do(ctx, r.c.B().Incr().Key(key).Build()).Error(); err == nil {
+	//	currentTime := time.Now()
+	//	endTime := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 23, 59, 59, 0, currentTime.Location())
+	//	err = r.c.Do(ctx, r.c.B().Expire().Key(key).Seconds(int64(endTime.Sub(currentTime)/time.Second)).Build()).Error()
+	//}
+
+	// switch to go-redis todo
 	return
 }
 
 func (r *redisCache) SetRechargeStatus(ctx context.Context, tradeNo string) error {
-	return r.c.Do(ctx, r.c.B().Set().
-		Key(_rechargeStatusKey+tradeNo).Value("1").
-		Nx().ExSeconds(5).Build()).Error()
+	//return r.c.Do(ctx, r.c.B().Set().
+	//	Key(_rechargeStatusKey+tradeNo).Value("1").
+	//	Nx().ExSeconds(5).Build()).Error()
+	return nil // switch to go-redis todo
 }
 
 func (r *redisCache) DelRechargeStatus(ctx context.Context, tradeNo string) error {
-	return r.c.Do(ctx, r.c.B().Del().Key(_rechargeStatusKey+tradeNo).Build()).Error()
+	//return r.c.Do(ctx, r.c.B().Del().Key(_rechargeStatusKey+tradeNo).Build()).Error()
+	return nil // switch to go-redis todo
 }

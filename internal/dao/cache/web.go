@@ -5,13 +5,11 @@
 package cache
 
 import (
-	"context"
+	"github.com/redis/go-redis/v9"
 	"time"
 
-	"github.com/redis/rueidis"
 	"github.com/rocboss/paopao-ce/internal/conf"
 	"github.com/rocboss/paopao-ce/internal/core"
-	"github.com/rocboss/paopao-ce/pkg/utils"
 )
 
 var (
@@ -21,96 +19,108 @@ var (
 
 type appCache struct {
 	cscExpire time.Duration
-	c         rueidis.Client
+	//c         rueidis.Client
+	c *redis.Client
 }
 
 type webCache struct {
 	core.AppCache
-	c               rueidis.Client
+	//c               rueidis.Client
+	c               *redis.Client
 	unreadMsgExpire int64
 }
 
 func (s *appCache) Get(key string) ([]byte, error) {
-	res, err := rueidis.MGetCache(s.c, context.Background(), s.cscExpire, []string{key})
-	if err != nil {
-		return nil, err
-	}
-	message := res[key]
-	return message.AsBytes()
+	//res, err := rueidis.MGetCache(s.c, context.Background(), s.cscExpire, []string{key})
+	//if err != nil {
+	//	return nil, err
+	//}
+	//message := res[key]
+	//return message.AsBytes()
+
+	return nil, nil // switch to go-redis todo
 }
 
 func (s *appCache) Set(key string, data []byte, ex int64) error {
-	ctx := context.Background()
-	cmd := s.c.B().Set().Key(key).Value(utils.String(data))
-	if ex > 0 {
-		return s.c.Do(ctx, cmd.ExSeconds(ex).Build()).Error()
-	}
-	return s.c.Do(ctx, cmd.Build()).Error()
+	//ctx := context.Background()
+	//cmd := s.c.B().Set().Key(key).Value(utils.String(data))
+	//if ex > 0 {
+	//	return s.c.Do(ctx, cmd.ExSeconds(ex).Build()).Error()
+	//}
+	//return s.c.Do(ctx, cmd.Build()).Error()
+
+	return nil // switch to go-redis todo
 }
 
 func (s *appCache) SetNx(key string, data []byte, ex int64) error {
-	ctx := context.Background()
-	cmd := s.c.B().Set().Key(key).Value(utils.String(data)).Nx()
-	if ex > 0 {
-		return s.c.Do(ctx, cmd.ExSeconds(ex).Build()).Error()
-	}
-	return s.c.Do(ctx, cmd.Build()).Error()
+	//ctx := context.Background()
+	//cmd := s.c.B().Set().Key(key).Value(utils.String(data)).Nx()
+	//if ex > 0 {
+	//	return s.c.Do(ctx, cmd.ExSeconds(ex).Build()).Error()
+	//}
+	//return s.c.Do(ctx, cmd.Build()).Error()
+
+	return nil // switch to go-redis todo
 }
 
 func (s *appCache) Delete(keys ...string) (err error) {
-	if len(keys) != 0 {
-		err = s.c.Do(context.Background(), s.c.B().Del().Key(keys...).Build()).Error()
-	}
-	return
+	//if len(keys) != 0 {
+	//	err = s.c.Do(context.Background(), s.c.B().Del().Key(keys...).Build()).Error()
+	//}
+	//return
+	return nil // switch to go-redis todo
 }
 
 func (s *appCache) DelAny(pattern string) (err error) {
-	var (
-		keys   []string
-		cursor uint64
-		entry  rueidis.ScanEntry
-	)
-	ctx := context.Background()
-	for {
-		cmd := s.c.B().Scan().Cursor(cursor).Match(pattern).Count(50).Build()
-		if entry, err = s.c.Do(ctx, cmd).AsScanEntry(); err != nil {
-			return
-		}
-		keys = append(keys, entry.Elements...)
-		if entry.Cursor != 0 {
-			cursor = entry.Cursor
-			continue
-		}
-		break
-	}
-	if len(keys) != 0 {
-		err = s.c.Do(ctx, s.c.B().Del().Key(keys...).Build()).Error()
-	}
-	return
+	//var (
+	//	keys   []string
+	//	cursor uint64
+	//	entry  rueidis.ScanEntry
+	//)
+	//ctx := context.Background()
+	//for {
+	//	cmd := s.c.B().Scan().Cursor(cursor).Match(pattern).Count(50).Build()
+	//	if entry, err = s.c.Do(ctx, cmd).AsScanEntry(); err != nil {
+	//		return
+	//	}
+	//	keys = append(keys, entry.Elements...)
+	//	if entry.Cursor != 0 {
+	//		cursor = entry.Cursor
+	//		continue
+	//	}
+	//	break
+	//}
+	//if len(keys) != 0 {
+	//	err = s.c.Do(ctx, s.c.B().Del().Key(keys...).Build()).Error()
+	//}
+	return // switch to go-redis todo
 }
 
 func (s *appCache) Exist(key string) bool {
-	cmd := s.c.B().Exists().Key(key).Build()
-	count, _ := s.c.Do(context.Background(), cmd).AsInt64()
-	return count > 0
+	//cmd := s.c.B().Exists().Key(key).Build()
+	//count, _ := s.c.Do(context.Background(), cmd).AsInt64()
+	//return count > 0
+
+	return false // switch to go-redis todo
 }
 
 func (s *appCache) Keys(pattern string) (res []string, err error) {
-	ctx, cursor := context.Background(), uint64(0)
-	for {
-		cmd := s.c.B().Scan().Cursor(cursor).Match(pattern).Count(50).Build()
-		entry, err := s.c.Do(ctx, cmd).AsScanEntry()
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, entry.Elements...)
-		if entry.Cursor != 0 {
-			cursor = entry.Cursor
-			continue
-		}
-		break
-	}
-	return
+	//ctx, cursor := context.Background(), uint64(0)
+	//for {
+	//	cmd := s.c.B().Scan().Cursor(cursor).Match(pattern).Count(50).Build()
+	//	entry, err := s.c.Do(ctx, cmd).AsScanEntry()
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	res = append(res, entry.Elements...)
+	//	if entry.Cursor != 0 {
+	//		cursor = entry.Cursor
+	//		continue
+	//	}
+	//	break
+	//}
+
+	return // switch to go-redis todo
 }
 
 func (s *webCache) GetUnreadMsgCountResp(uid int64) ([]byte, error) {
@@ -131,20 +141,22 @@ func (s *webCache) ExistUnreadMsgCountResp(uid int64) bool {
 }
 
 func (s *webCache) PutHistoryMaxOnline(newScore int) (int, error) {
-	ctx := context.Background()
-	cmd := s.c.B().Zadd().
-		Key(conf.KeySiteStatus).
-		Gt().ScoreMember().
-		ScoreMember(float64(newScore), conf.KeyHistoryMaxOnline).Build()
-	if err := s.c.Do(ctx, cmd).Error(); err != nil {
-		return 0, err
-	}
-	cmd = s.c.B().Zscore().Key(conf.KeySiteStatus).Member(conf.KeyHistoryMaxOnline).Build()
-	if score, err := s.c.Do(ctx, cmd).ToFloat64(); err == nil {
-		return int(score), nil
-	} else {
-		return 0, err
-	}
+	//ctx := context.Background()
+	//cmd := s.c.B().Zadd().
+	//	Key(conf.KeySiteStatus).
+	//	Gt().ScoreMember().
+	//	ScoreMember(float64(newScore), conf.KeyHistoryMaxOnline).Build()
+	//if err := s.c.Do(ctx, cmd).Error(); err != nil {
+	//	return 0, err
+	//}
+	//cmd = s.c.B().Zscore().Key(conf.KeySiteStatus).Member(conf.KeyHistoryMaxOnline).Build()
+	//if score, err := s.c.Do(ctx, cmd).ToFloat64(); err == nil {
+	//	return int(score), nil
+	//} else {
+	//	return 0, err
+	//}
+
+	return 0, nil // switch to go-redis todo
 }
 
 func newAppCache() *appCache {

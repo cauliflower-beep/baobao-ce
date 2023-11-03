@@ -32,5 +32,5 @@ func Register(cmd *cobra.Command) {
 
 // Execute start application
 func Execute() {
-	rootCmd.Execute()
+	_ = rootCmd.Execute()
 }
